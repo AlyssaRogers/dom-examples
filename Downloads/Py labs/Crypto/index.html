@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module" src="Crypto.js"></script>
+</head>
+<body>
+    <div class="text1 fader">Cryptography is sometimes viewed by the public eye as unimportant.</div>
+    <div class="text1 fader">After all, hackers can get through anything, right?</div>
+    <div class="text1 fader">Actually, encryption makes more difference than you probably realize!</div>
+    <div class="text1 fader">This video demonstrates the difference that a few bits can make when it comes to decryption</div>
+
+    <p>Cow :D</p>
+
+    //TODO: hook up to the fader.js
+    function startFading() {
+        $(document).ready(function() {
+            fader_set_defaults({
+                in: 300,
+                stay: 5000,
+                out: 300,
+                delaynext: 6000
+            });
+            fader_start();
+        })
+    }
+</body>
+</html>

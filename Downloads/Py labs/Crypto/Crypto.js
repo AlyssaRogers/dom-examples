@@ -34,26 +34,23 @@ async function createCipherText(key) {
 }
 
 async function findKeyOfSize2(key, cipherText, iv) {
-	const exportedKey = await window.crypto.subtle.exportKey("raw", key);
-    //console.log("exportedKey: ", exportedKey);
-    let guessBuffer = new Int32Array(exportedKey);
-	//console.log("guessBuffer: ", guessBuffer);
+	const exportedKey = await window.crypto.subtle.exportKey("raw", key);       
+    let guessBuffer = new Uint32Array(exportedKey);
+	
 	const mask = 0b11;
-	
+
     guessBuffer[0] &= ~mask;
-    let final = guessBuffer;
+	let decrypted;
+	let original = guessBuffer[0];
+	let converted;
+    
 	for (let i = 0; i < 4; ++i) {
-		
-		final[0] = guessBuffer[0] + i;
-		//guessBuffer[0] &= ~mask;
-        	//console.log("guess: ", guessBuffer);
-		//console.log("final buffer: ", final)	;
-	
-
-
+		guessBuffer[0] = original + i;
+		converted = guessBuffer.buffer;
+				console.log(guessBuffer);
 
 	try {
-		let importedKey = await window.crypto.subtle.importKey("raw", final,"AES-GCM", true, ["encrypt","decrypt"]);
+		let importedKey = await window.crypto.subtle.importKey("raw", converted,"AES-GCM", true, ["encrypt","decrypt"]);
     		console.log("Trying new key: ", importedKey);
 
 		let decrypted = await window.crypto.subtle.decrypt(
@@ -64,7 +61,7 @@ async function findKeyOfSize2(key, cipherText, iv) {
 	  		importedKey,
 			cipher
 		);
-		
+
 		console.log("Encryption suceeded! key was: ", decrypted);
 		break;
 	}
@@ -77,26 +74,22 @@ async function findKeyOfSize2(key, cipherText, iv) {
 
 async function findKeyOfSize4(key, cipherText, iv) {
 	const exportedKey = await window.crypto.subtle.exportKey("raw", key);       
-    //console.log("exportedKey: ", exportedKey);
-    let guessBuffer = new Int32Array(exportedKey);
-	//TODO: SOMEWHERE I AM DIRECTLY ACCESSING EXPORTEDKEY, GUESSBUFFER BE A VIEW
-	//ARRAY
-	//console.log("guessBuffer: ", guessBuffer);
+    let guessBuffer = new Uint32Array(exportedKey);
+	
 	const mask = 0b1111;
-	
+
     guessBuffer[0] &= ~mask;
-    //const maskedBuffer = guessBuffer;
-    let final = guessBuffer;
-	
+	let decrypted;
+	let original = guessBuffer[0];
+	let converted;
+    
 	for (let i = 0; i < 16; ++i) {
-		final[0] = guessBuffer[0] + i;
-		guessBuffer[0] &= ~mask;
-	
-        //guessBuffer[0] = maskedBuffer[0];
-        
+		guessBuffer[0] = original + i;
+		converted = guessBuffer.buffer;
+				console.log(guessBuffer);
 
 	try {
-		let importedKey = await window.crypto.subtle.importKey("raw", final,"AES-GCM", true, ["encrypt","decrypt"]);
+		let importedKey = await window.crypto.subtle.importKey("raw", converted,"AES-GCM", true, ["encrypt","decrypt"]);
     		console.log("Trying new key: ", importedKey);
 
 		let decrypted = await window.crypto.subtle.decrypt(
@@ -107,7 +100,7 @@ async function findKeyOfSize4(key, cipherText, iv) {
 	  		importedKey,
 			cipher
 		);
-		
+
 		console.log("Encryption suceeded! key was: ", decrypted);
 		break;
 	}
@@ -128,7 +121,48 @@ console.log(key);
 
 
 //findKeyOfSize2(key, cipher, iv);
-findKeyOfSize4(key, cipher, iv);
+//findKeyOfSize4(key, cipher, iv);
+async function findKeyOfSize16(key, cipherText, iv) {
+	const exportedKey = await window.crypto.subtle.exportKey("raw", key);       
+    let guessBuffer = new Uint32Array(exportedKey);
+	
+	const mask = 0b1111111111111111;
+	let times = 2**19;
+    guessBuffer[0] &= ~mask;
+	//TODO: let fakeBuffer = new Uint32Array(guessBuffer); //
+	let decrypted;
+	let original = guessBuffer[0];
+	let converted;
+    
+	for (let i = 0; i < times; ++i) {
+		guessBuffer[0] = original + i;
+		converted = guessBuffer.buffer;
+				console.log(guessBuffer);
+
+	try {
+		let importedKey = await window.crypto.subtle.importKey("raw", guessBuffer,"AES-GCM", true, ["encrypt","decrypt"]);
+    		console.log("Trying new key: ", importedKey);
+
+		let decrypted = await window.crypto.subtle.decrypt(
+			{
+                        name: "AES-GCM",
+                        iv: iv
+                    	},
+	  		importedKey,
+			cipher
+		);
+
+		console.log("Encryption suceeded! key was: ", decrypted);
+		break;
+	}
+	catch (e){
+		console.log("Decryption failed: ", e, " ", i + 1);
+	}
+	}
+}
+
+findKeyOfSize16(key, cipher, iv);
+
 
 
 //testing size of 4, exported key was ....2199, my numbers looped through 2208, 2207, 2206, 2205 all the way to 2199. 
